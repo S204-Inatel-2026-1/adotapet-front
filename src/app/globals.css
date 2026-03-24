@@ -4,7 +4,6 @@
 
 :root {
   --font-size: 16px;
-  /* Estas são as cores maravilhosas que o Figma Make gerou para o AdotaPet */
   --background: #f0f3ed;
   --foreground: #2c3e3c;
   --card: #faf8f3;
@@ -45,7 +44,6 @@
 }
 
 .dark {
-  /* ... mantive toda a estrutura do Dark Mode gerada pelo Figma ... */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.145 0 0);
