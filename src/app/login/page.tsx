@@ -10,20 +10,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Input } from "@/components/ui/Input"; // O nosso componente bonitão!
 
-// 1. O CONTRATO (ZOD): Aqui definimos as regras do formulário
+//  O CONTRATO (ZOD): Aqui definimos as regras do formulário
 const loginSchema = z.object({
     email: z.string()
         .min(1, "O e-mail é obrigatório")
         .email("Digite um formato de e-mail válido"),
     password: z.string()
-        .min(6, "A senha deve ter no mínimo 6 caracteres"),
+        .min(8, "A senha deve ter no mínimo 8 caracteres"),
 });
 
 // Extraímos a tipagem do schema para o TypeScript nos ajudar
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function Login() {
-    // 2. O GERENTE (React Hook Form): Configurando o formulário
+    // O GERENTE (React Hook Form): Configurando o formulário
     const {
         register, // A função que "grampeia" os inputs
         handleSubmit, // A função que intercepta o envio
@@ -32,7 +32,7 @@ export default function Login() {
         resolver: zodResolver(loginSchema), // Conectando o React Hook Form com o Zod
     });
 
-    // 3. A AÇÃO: O que acontece quando os dados passam pelo Zod com sucesso?
+    // A AÇÃO: O que acontece quando os dados passam pelo Zod com sucesso?
     const onSubmit = async (data: LoginForm) => {
         // Simulando uma requisição para a API (vai demorar 2 segundos para testarmos o loading)
         await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -108,7 +108,7 @@ export default function Login() {
                                 {/* Campo de E-mail */}
                                 <div className="relative">
                                     {/* O ícone fica flutuando por cima do input */}
-                                    <Mail className="absolute left-4 top-[38px] size-5 text-muted-foreground z-10" />
+                                    <Mail className="absolute left-4 top-9.5 size-5 text-muted-foreground z-10" />
                                     <Input
                                         label="E-mail"
                                         type="email"
@@ -121,7 +121,7 @@ export default function Login() {
 
                                 {/* Campo de Senha */}
                                 <div className="relative">
-                                    <Lock className="absolute left-4 top-[38px] size-5 text-muted-foreground z-10" />
+                                    <Lock className="absolute left-4 top-9.5 size-5 text-muted-foreground z-10" />
                                     <Input
                                         label="Senha"
                                         type="password"
