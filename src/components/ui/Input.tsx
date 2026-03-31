@@ -1,25 +1,27 @@
-import React, { forwardRef } from "react";
+import React, { forwardRef, useId } from "react";
 
-// Definimos o que o nosso Input pode receber (além das coisas normais do HTML)
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     label?: string;
-    error?: string; // Se receber uma string aqui, o input fica vermelho!
+    error?: string;
 }
 
-// Usamos o forwardRef para o React Hook Form conseguir se conectar a ele
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-    ({ className = "", type, label, error, ...props }, ref) => {
+    ({ className = "", type, label, error, id, ...props }, ref) => {
+        // Cria um ID único aleatório (ex: :r1:, :r2:) caso a gente não passe um id manual
+        const generatedId = useId();
+        const inputId = id || generatedId;
+
         return (
             <div className="flex flex-col gap-1.5 w-full">
-                {/* Renderiza a Label se ela for passada */}
                 {label && (
-                    <label className="text-sm font-medium text-foreground">
+                    // A mágica acontece aqui: conectamos a Label ao Input
+                    <label htmlFor={inputId} className="text-sm font-medium text-foreground">
                         {label}
                     </label>
                 )}
 
-                {/* O Input em si, com as cores do Figma Make */}
                 <input
+                    id={inputId} // E o input recebe o ID correspondente
                     type={type}
                     ref={ref}
                     className={`
@@ -30,15 +32,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             disabled:cursor-not-allowed disabled:opacity-50
             transition-colors duration-200
             ${error
-                            ? "border-destructive focus-visible:ring-destructive" // Estado de erro (Vermelho)
-                            : "border-border focus-visible:ring-ring"             // Estado normal (Borda padrão)
+                            ? "border-destructive focus-visible:ring-destructive"
+                            : "border-border focus-visible:ring-ring"
                         }
             ${className}
           `}
                     {...props}
                 />
 
-                {/* Renderiza a mensagem de erro em vermelho logo abaixo do input */}
                 {error && (
                     <span className="text-xs font-medium text-destructive mt-0.5">
                         {error}
@@ -49,5 +50,4 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     }
 );
 
-// Necessário quando usamos forwardRef para o React não se perder nos logs
 Input.displayName = "Input";
