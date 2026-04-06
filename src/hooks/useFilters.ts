@@ -1,18 +1,19 @@
-// src/hooks/useFilters.ts
 import { useState, useMemo } from 'react';
-import { Pet } from '@/types/pet';
+import { Pet } from '@/types/pets';
 
-// Define quais filtros vamos ter
+// 1. Atualizamos a interface para incluir o 'size'
 interface Filters {
-  search: string;           // busca por nome
-  animalType: 'all' | 'dog' | 'cat';  // tipo de animal
+  search: string;
+  animalType: 'all' | 'dog' | 'cat';
+  size: 'all' | 'small' | 'medium' | 'large'; // Adicionado aqui
 }
 
 export function useFilters(pets: Pet[]) {
-  // Estado dos filtros (valores iniciais)
+  // 2. Adicionamos o valor inicial do filtro de tamanho
   const [filters, setFilters] = useState<Filters>({
     search: '',
     animalType: 'all',
+    size: 'all', // Adicionado aqui
   });
 
   // Função para atualizar um filtro específico
@@ -20,7 +21,7 @@ export function useFilters(pets: Pet[]) {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  // useMemo = recalcula só quando necessário (otimização)
+  // 3. Atualizamos o useMemo para filtrar pelo tamanho também
   const filteredPets = useMemo(() => {
     let result = [...pets];
 
@@ -36,8 +37,13 @@ export function useFilters(pets: Pet[]) {
       result = result.filter(pet => pet.type === filters.animalType);
     }
 
+    // NOVO: Filtro por tamanho (pequeno/médio/grande)
+    if (filters.size !== 'all') {
+      result = result.filter(pet => pet.size === filters.size);
+    }
+
     return result;
-  }, [pets, filters.search, filters.animalType]);
+  }, [pets, filters.search, filters.animalType, filters.size]); // Adicionado filters.size na dependência
 
   return { filters, updateFilter, filteredPets };
 }
