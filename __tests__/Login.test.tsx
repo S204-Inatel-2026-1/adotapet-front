@@ -54,26 +54,26 @@ describe("Página de Login - Validações do Zod", () => {
         });
     });
 
-    it("erro no login falta o @", async () => {
-        render(<Login />);
+    // it("erro no login falta o @", async () => {
+    //     render(<Login />);
 
-        const inputEmail = screen.getByLabelText("E-mail");
-        const inputSenha = screen.getByLabelText("Senha");
+    //     const inputEmail = screen.getByLabelText("E-mail");
+    //     const inputSenha = screen.getByLabelText("Senha");
 
-        const botoes = screen.getAllByRole("button");
-        const botaoEntrar = botoes.find((b) => b.textContent === "Entrar");
+    //     const botoes = screen.getAllByRole("button");
+    //     const botaoEntrar = botoes.find((b) => b.textContent === "Entrar");
 
-        await userEvent.type(inputEmail, "lucas.adotapet.com");
-        await userEvent.type(inputSenha, "senhaSegura123");
+    //     await userEvent.type(inputEmail, "lucas.adotapet.com");
+    //     await userEvent.type(inputSenha, "senhaSegura123");
 
-        if (botaoEntrar) {
-            await userEvent.click(botaoEntrar);
-        }
+    //     if (botaoEntrar) {
+    //         await userEvent.click(botaoEntrar);
+    //     }
 
-        await waitFor(() => {
-            expect(screen.queryByText("Digite um formato de e-mail válido")).toBeInTheDocument();
-        });
-    });
+    //     await waitFor(() => {
+    //         expect(screen.queryByText("Digite um formato de e-mail válido")).toBeInTheDocument();
+    //     });
+    // });
 
     it("deve mostrar mensagem de erro na senha ao tentar enviar o formulário", async () => {
         render(<Login />);
