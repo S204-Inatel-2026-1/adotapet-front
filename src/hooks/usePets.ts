@@ -1,7 +1,7 @@
 // src/hooks/usePets.ts
 import { useState, useEffect } from 'react';
 import { api } from '@/services/api';
-import { Pet } from '@/types/pet';
+import { Pet } from '@/types/pets';
 
 // Este hook vai buscar e guardar os pets
 export function usePets() {

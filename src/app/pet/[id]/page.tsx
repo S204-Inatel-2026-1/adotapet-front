@@ -4,7 +4,7 @@
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { api } from '@/services/api';
-import { Pet } from '@/types/pet';
+import { Pet } from '@/types/pets';
 
 export default function PetDetails() {
   // Pega o ID da URL
