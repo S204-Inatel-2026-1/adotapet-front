@@ -11,6 +11,9 @@ const config: Config = {
     testEnvironment: 'jsdom',
     // Vamos dizer ao Jest para carregar um ficheiro de preparação antes dos testes
     setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+    moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/src/$1',
+    },
 }
 
 // Exporta a configuração para o Next.js a processar

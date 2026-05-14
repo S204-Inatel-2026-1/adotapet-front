@@ -9,6 +9,10 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Input } from "@/components/ui/Input"; // O nosso componente bonitão!
+import { api } from "@/services/api";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 //  O CONTRATO (ZOD): Aqui definimos as regras do formulário
 const loginSchema = z.object({
@@ -23,6 +27,10 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function Login() {
+    const router = useRouter();
+    const { login } = useAuth();
+    const [error, setError] = useState<string | null>(null);
+
     // O GERENTE (React Hook Form): Configurando o formulário
     const {
         register, // A função que "grampeia" os inputs
@@ -34,10 +42,19 @@ export default function Login() {
 
     // A AÇÃO: O que acontece quando os dados passam pelo Zod com sucesso?
     const onSubmit = async (data: LoginForm) => {
-        // Simulando uma requisição para a API (vai demorar 2 segundos para testarmos o loading)
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        console.log("Dados prontos para ir para o Back-end:", data);
-        alert("Login aprovado pelo Zod! Veja o console.");
+        try {
+            setError(null);
+            const response = await api.login(data);
+            
+            // Salva o token no localStorage e atualiza o estado global
+            login(response.access_token);
+            
+            // Redireciona para a home
+            router.push('/');
+        } catch (err: any) {
+            setError(err.message || 'E-mail ou senha inválidos');
+            console.error("Erro no login:", err);
+        }
     };
 
     return (
@@ -101,6 +118,13 @@ export default function Login() {
                                     Acesse sua conta e encontre seu novo amigo
                                 </p>
                             </div>
+
+                            {/* Mensagem de Erro */}
+                            {error && (
+                                <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-2xl text-sm text-center">
+                                    {error}
+                                </div>
+                            )}
 
                             {/* Conectamos o handleSubmit do React Hook Form aqui */}
                             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">

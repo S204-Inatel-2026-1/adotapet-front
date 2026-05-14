@@ -8,13 +8,21 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { api } from "@/services/api";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 
 // 1. O CONTRATO (ZOD)
 const registerSchema = z.object({
     name: z.string().min(3, "O nome deve ter no mínimo 3 caracteres"),
     email: z.string().email("Digite um e-mail válido"),
-    password: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
+    password: z.string()
+        .min(8, "A senha deve ter no mínimo 8 caracteres")
+        .regex(/(?=.*[a-z])/, "A senha deve conter pelo menos uma letra minúscula")
+        .regex(/(?=.*[A-Z])/, "A senha deve conter pelo menos uma letra maiúscula")
+        .regex(/(?=.*\d)/, "A senha deve conter pelo menos um número")
+        .regex(/(?=.*[^A-Za-z0-9])/, "A senha deve conter pelo menos um caractere especial"),
     confirmPassword: z.string(),
     phone: z.string().min(10, "Telefone inválido"),
     city: z.string().min(2, "A cidade é obrigatória"),
@@ -31,11 +39,14 @@ const registerSchema = z.object({
 type RegisterForm = z.infer<typeof registerSchema>;
 
 const brazilianStates = [
-    "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
+    "", "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
     "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
 ];
 
 export default function Register() {
+    const router = useRouter();
+    const [error, setError] = useState<string | null>(null);
+
     // 2. O GERENTE (React Hook Form)
     const {
         register,
@@ -46,9 +57,15 @@ export default function Register() {
     });
 
     const onSubmit = async (data: RegisterForm) => {
-        await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulando API
-        console.log("Dados do novo usuário:", data);
-        alert("Conta criada com sucesso! Zod aprovou tudo.");
+        try {
+            setError(null);
+            await api.register(data);
+            alert("Conta criada com sucesso! Você já pode fazer login.");
+            router.push('/login');
+        } catch (err: any) {
+            setError(err.message || 'Erro ao criar conta. Tente novamente.');
+            console.error("Erro no registro:", err);
+        }
     };
 
     const stateOptions = brazilianStates.map(state => ({ value: state, label: state }));
@@ -96,6 +113,13 @@ export default function Register() {
                                     Comece sua jornada para encontrar um novo amigo
                                 </p>
                             </div>
+
+                            {/* Mensagem de Erro */}
+                            {error && (
+                                <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-2xl text-sm text-center">
+                                    {error}
+                                </div>
+                            )}
 
                             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 

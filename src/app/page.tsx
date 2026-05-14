@@ -6,11 +6,13 @@ import PetCard from '@/components/PetCard';
 import Image from 'next/image';
 import { useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Home() {
   const { pets, loading, error } = usePets();
   const { filters, updateFilter, filteredPets } = useFilters(pets);
   const [socialMessage, setSocialMessage] = useState<string | null>(null);
+  const { isAuthenticated, logout } = useAuth();
 
   // Função para mostrar card temporário de redes sociais
   const showComingSoon = (platform: string) => {
@@ -70,9 +72,18 @@ export default function Home() {
             <Link href="/resgate" className="hover:text-black transition-colors">Resgate</Link>
             <Link href="/denunciar" className="hover:text-black transition-colors">Denunciar</Link>
             
-            <Link href="/login" className="flex items-center gap-2 text-[#2C4A3E] font-bold border-1 border-[#2C4A3E] px-8 py-2 rounded-full hover:bg-[#2C4A3E] hover:text-white transition-all text-sm shadow-[4px_4px_0px_0px_rgba(44,74,62,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]">
-              <span>➜]</span> Entrar
-            </Link>
+            {isAuthenticated ? (
+              <button 
+                onClick={logout}
+                className="flex items-center gap-2 text-[#2C4A3E] font-bold border-1 border-[#2C4A3E] px-8 py-2 rounded-full hover:bg-red-500 hover:text-white transition-all text-sm shadow-[4px_4px_0px_0px_rgba(44,74,62,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+              >
+                <span>➜]</span> Sair
+              </button>
+            ) : (
+              <Link href="/login" className="flex items-center gap-2 text-[#2C4A3E] font-bold border-1 border-[#2C4A3E] px-8 py-2 rounded-full hover:bg-[#2C4A3E] hover:text-white transition-all text-sm shadow-[4px_4px_0px_0px_rgba(44,74,62,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]">
+                <span>➜]</span> Entrar
+              </Link>
+            )}
           </div>
         </div>
       </nav>
