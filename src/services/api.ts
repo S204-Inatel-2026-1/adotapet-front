@@ -1,15 +1,15 @@
 // src/services/api.ts
 
+// Importando o tipo Pet que criamos
 import { Pet } from '@/types/pets';
 
-const BASE_URL = '/api-backend';
-
-// Por enquanto, vamos manter os dados mockados para os pets
+// Por enquanto, vamos usar dados mockados
+// Quando a API real estiver pronta, é só substituir
 const MOCK_PETS: Pet[] = [
   {
     id: 1,
     name: 'Thor',
-    image: 'https://static.casapino.com.br/casapino/2017/02/201702/vira_latacorrendo-86d7fa10.jpg',
+    image: "/pets/thor.jpg",
     type: 'dog',
     breed: 'Vira-lata (SRD)',
     gender: 'male',
@@ -22,7 +22,7 @@ const MOCK_PETS: Pet[] = [
   {
     id: 2,
     name: 'Luna',
-    image: 'https://blog.polipet.com.br/wp-content/uploads/2023/08/AdobeStock_237421026-445x445.jpeg',
+    image: "/pets/luna.jpeg",
     type: 'cat',
     breed: 'Vira-lata (SRD) Rajada',
     gender: 'female',
@@ -35,7 +35,7 @@ const MOCK_PETS: Pet[] = [
   {
     id: 3,
     name: 'Bob',
-    image: 'https://www.pedigree.com.br/sites/g/files/fnmzdf2401/files/2024-06/vira-latas-02.png',
+    image: "/pets/bob.png",
     type: 'dog',
     breed: 'Vira-lata',
     gender: 'male',
@@ -48,7 +48,7 @@ const MOCK_PETS: Pet[] = [
   {
     id: 4,
     name: 'Mia',
-    image: 'https://revistaanamaria.com.br/wp-content/uploads/2026/01/gato-srd-felinos-sem-raca-definida-dominam-os-lares-brasileiros-1.jpg',
+    image: "/pets/mia.jpg",
     type: 'cat',
     breed: 'Vira-lata (SRD)',
     gender: 'female',
@@ -61,7 +61,7 @@ const MOCK_PETS: Pet[] = [
   {
     id: 5,
     name: 'Zeus',
-    image: 'https://pearsonsaudeanimal.com/wp-content/uploads/2024/06/transly-translation-agency-FI9J0gjJI_8-unsplash-1024x684.jpg',
+    image: "/pets/zeus.jpg",
     type: 'dog',
     breed: 'Vira-lata Preto',
     gender: 'male',
@@ -74,7 +74,7 @@ const MOCK_PETS: Pet[] = [
   {
     id: 6,
     name: 'Mel',
-    image: 'https://www.pedigree.com.br/sites/g/files/fnmzdf2401/files/2024-05/dia-do-vira-lata-02_0.jpg',
+    image: "/pets/mel.jpg",
     type: 'dog',
     breed: 'Vira-lata',
     gender: 'female',
@@ -87,7 +87,7 @@ const MOCK_PETS: Pet[] = [
   {
     id: 7,
     name: 'Max',
-    image: 'https://cdn.shopify.com/s/files/1/0500/8965/6473/files/pexels-arina-krasnikova-7726295_480x480.jpg?v=1663249037',
+    image: "/pets/max.webp",
     type: 'cat',
     breed: 'Vira-lata (SRD)',
     gender: 'male',
@@ -100,7 +100,7 @@ const MOCK_PETS: Pet[] = [
   {
     id: 8,
     name: 'Nina',
-    image: 'https://p2.trrsf.com/image/fget/cf/1200/1200/middle/images.terra.com/2025/09/04/2062023514-gatinho-pipo-2024.jpg',
+    image: "/pets/nina.webp",
     type: 'cat',
     breed: 'Vira-lata (SRD)',
     gender: 'female',
@@ -112,24 +112,37 @@ const MOCK_PETS: Pet[] = [
   }
 ];
 
+// Nosso serviço de API
 export const api = {
   // Busca todos os pets
   getPets: async (): Promise<Pet[]> => {
+    // Simula um delay de rede (como se estivesse carregando)
     await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Retorna os dados mockados
     return MOCK_PETS;
+    
+    // 🔜 QUANDO A API ESTIVER PRONTA, SUBSTITUA POR:
+    // const response = await fetch('http://localhost:3000/api/pets');
+    // return response.json();
   },
 
   // Busca um pet específico pelo ID
   getPetById: async (id: number): Promise<Pet> => {
     await new Promise(resolve => setTimeout(resolve, 500));
+    
     const pet = MOCK_PETS.find(p => p.id === id);
     if (!pet) throw new Error('Pet não encontrado');
     return pet;
+    
+    // 🔜 QUANDO A API ESTIVER PRONTA:
+    // const response = await fetch(`http://localhost:3000/api/pets/${id}`);
+    // return response.json();
   },
 
   // Realiza o login
   login: async (credentials: any) => {
-    const response = await fetch(`${BASE_URL}/auth/login`, {
+    const response = await fetch('/api-backend/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials),
@@ -145,7 +158,7 @@ export const api = {
 
   // Realiza o registro
   register: async (userData: any) => {
-    const response = await fetch(`${BASE_URL}/users`, {
+    const response = await fetch('/api-backend/users', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
