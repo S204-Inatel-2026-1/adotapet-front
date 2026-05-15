@@ -138,5 +138,43 @@ export const api = {
     // 🔜 QUANDO A API ESTIVER PRONTA:
     // const response = await fetch(`http://localhost:3000/api/pets/${id}`);
     // return response.json();
+  },
+
+  // Realiza o login
+  login: async (credentials: any) => {
+    const response = await fetch('/api-backend/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Erro ao realizar login');
+    }
+
+    return response.json();
+  },
+
+  // Realiza o registro
+  register: async (userData: any) => {
+    const response = await fetch('/api-backend/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fullName: userData.name,
+        email: userData.email,
+        password: userData.password,
+        phone: userData.phone,
+        role: 'ADOPTER', // Default role
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Erro ao realizar registro');
+    }
+
+    return response.json();
   }
 };

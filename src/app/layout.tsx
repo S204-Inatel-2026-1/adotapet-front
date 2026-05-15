@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 // 1. Configurando a nova fonte DM Sans
 const dmSans = DM_Sans({
@@ -28,7 +29,9 @@ export default function RootLayout({
     >
       {/* Mantendo a sua estrutura flexível original */}
       <body className="min-h-full flex flex-col font-sans">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

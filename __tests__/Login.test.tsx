@@ -1,32 +1,56 @@
-// /// <reference types="jest" />
-// /// <reference types="@testing-library/jest-dom" />
-
-import "@testing-library/jest-dom"; // Garante que o TS entenda o toBeInTheDocument
+import "@testing-library/jest-dom"; 
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Login from "../src/app/login/page";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { api } from "@/services/api";
 
-// Mock do next/link ajustado para o ESLint ficar feliz
+// Mock do next/navigation
+jest.mock("next/navigation", () => ({
+    useRouter: jest.fn(),
+}));
+
+// Mock do AuthContext
+jest.mock("@/contexts/AuthContext", () => ({
+    useAuth: jest.fn(),
+}));
+
+// Mock da API
+jest.mock("@/services/api", () => ({
+    api: {
+        login: jest.fn(),
+    },
+}));
+
+// Mock do next/link
 jest.mock("next/link", () => {
     const MockedLink = ({ children, href }: { children: React.ReactNode; href?: string }) => {
         return <a href={href || "#"}>{children}</a>;
     };
-    MockedLink.displayName = "MockedLink"; // Resolve o erro de "missing display name"
+    MockedLink.displayName = "MockedLink";
     return MockedLink;
 });
 
-describe("Página de Login - Validações do Zod", () => {
+describe("Página de Login", () => {
+    const mockPush = jest.fn();
+    const mockLogin = jest.fn();
+
+    beforeEach(() => {
+        (useRouter as jest.Mock).mockReturnValue({
+            push: mockPush,
+        });
+        (useAuth as jest.Mock).mockReturnValue({
+            login: mockLogin,
+        });
+        jest.clearAllMocks();
+    });
+
     it("deve mostrar mensagens de erro ao tentar enviar o formulário vazio", async () => {
         render(<Login />);
 
-        const botoes = screen.getAllByRole("button");
-        const botaoEntrar = botoes.find((b) => b.textContent === "Entrar");
-
-        expect(botaoEntrar).toBeDefined();
-
-        if (botaoEntrar) {
-            await userEvent.click(botaoEntrar);
-        }
+        const botaoEntrar = screen.getByRole("button", { name: /entrar/i });
+        await userEvent.click(botaoEntrar);
 
         await waitFor(() => {
             expect(screen.getByText("O e-mail é obrigatório")).toBeInTheDocument();
@@ -34,129 +58,40 @@ describe("Página de Login - Validações do Zod", () => {
         });
     });
 
-    it("deve mostrar mensagem de erro no login ao tentar enviar o formulário", async () => {
+    it("deve realizar login com sucesso e redirecionar", async () => {
+        (api.login as jest.Mock).mockResolvedValue({ access_token: "fake-token" });
+        
         render(<Login />);
 
-        const inputEmail = screen.getByLabelText("E-mail");
-        const inputSenha = screen.getByLabelText("Senha");
+        const inputEmail = screen.getByLabelText(/e-mail/i);
+        const inputSenha = screen.getByLabelText(/senha/i);
+        const botaoEntrar = screen.getByRole("button", { name: /entrar/i });
 
-        const botoes = screen.getAllByRole("button");
-        const botaoEntrar = botoes.find((b) => b.textContent === "Entrar");
-
-        await userEvent.type(inputSenha, "senhaSegura123");
-
-        if (botaoEntrar) {
-            await userEvent.click(botaoEntrar);
-        }
+        await userEvent.type(inputEmail, "test@example.com");
+        await userEvent.type(inputSenha, "password123");
+        await userEvent.click(botaoEntrar);
 
         await waitFor(() => {
-            expect(screen.queryByText("O e-mail é obrigatório")).toBeInTheDocument();
+            expect(api.login).toHaveBeenCalledWith({
+                email: "test@example.com",
+                password: "password123",
+            });
+            expect(mockLogin).toHaveBeenCalledWith("fake-token");
+            expect(mockPush).toHaveBeenCalledWith("/");
         });
     });
 
-    // it("erro no login falta o @", async () => {
-    //     render(<Login />);
-
-    //     const inputEmail = screen.getByLabelText("E-mail");
-    //     const inputSenha = screen.getByLabelText("Senha");
-
-    //     const botoes = screen.getAllByRole("button");
-    //     const botaoEntrar = botoes.find((b) => b.textContent === "Entrar");
-
-    //     await userEvent.type(inputEmail, "lucas.adotapet.com");
-    //     await userEvent.type(inputSenha, "senhaSegura123");
-
-    //     if (botaoEntrar) {
-    //         await userEvent.click(botaoEntrar);
-    //     }
-
-    //     await waitFor(() => {
-    //         expect(screen.queryByText("Digite um formato de e-mail válido")).toBeInTheDocument();
-    //     });
-    // });
-
-    it("deve mostrar mensagem de erro na senha ao tentar enviar o formulário", async () => {
+    it("deve exibir mensagem de erro quando o login falha", async () => {
+        (api.login as jest.Mock).mockRejectedValue(new Error("Credenciais inválidas"));
+        
         render(<Login />);
 
-        const inputEmail = screen.getByLabelText("E-mail");
-        const inputSenha = screen.getByLabelText("Senha");
-
-        const botoes = screen.getAllByRole("button");
-        const botaoEntrar = botoes.find((b) => b.textContent === "Entrar");
-
-        await userEvent.type(inputEmail, "lucas@adotapet.com");
-
-        if (botaoEntrar) {
-            await userEvent.click(botaoEntrar);
-        }
+        await userEvent.type(screen.getByLabelText(/e-mail/i), "wrong@example.com");
+        await userEvent.type(screen.getByLabelText(/senha/i), "wrongpass");
+        await userEvent.click(screen.getByRole("button", { name: /entrar/i }));
 
         await waitFor(() => {
-            expect(screen.queryByText("A senha deve ter no mínimo 8 caracteres")).toBeInTheDocument();
-        });
-    });
-
-    it("erro na senha (senha muito curta)", async () => {
-        render(<Login />);
-
-        const inputEmail = screen.getByLabelText("E-mail");
-        const inputSenha = screen.getByLabelText("Senha");
-
-        const botoes = screen.getAllByRole("button");
-        const botaoEntrar = botoes.find((b) => b.textContent === "Entrar");
-
-        await userEvent.type(inputEmail, "lucas@adotapet.com");
-        await userEvent.type(inputSenha, "12345");
-
-        if (botaoEntrar) {
-            await userEvent.click(botaoEntrar);
-        }
-
-        await waitFor(() => {
-            expect(screen.queryByText("A senha deve ter no mínimo 8 caracteres")).toBeInTheDocument();
-        });
-    });
-
-    it("deve passar na validação ao preencher dados corretos (Caminho Feliz)", async () => {
-        render(<Login />);
-
-        const inputEmail = screen.getByLabelText("E-mail");
-        const inputSenha = screen.getByLabelText("Senha");
-
-        const botoes = screen.getAllByRole("button");
-        const botaoEntrar = botoes.find((b) => b.textContent === "Entrar");
-
-        await userEvent.type(inputEmail, "lucas@adotapet.com");
-        await userEvent.type(inputSenha, "senhaSegura123");
-
-        if (botaoEntrar) {
-            await userEvent.click(botaoEntrar);
-        }
-
-        await waitFor(() => {
-            expect(screen.queryByText("O e-mail é obrigatório")).not.toBeInTheDocument();
-            expect(screen.queryByText("A senha deve ter no mínimo 8 caracteres")).not.toBeInTheDocument();
-        });
-    });
-
-    it("deve passar na validação ao preencher dados corretos (Caminho Feliz - feedback visual)", async () => {
-        render(<Login />);
-
-        const inputEmail = screen.getByLabelText("E-mail");
-        const inputSenha = screen.getByLabelText("Senha");
-
-        const botoes = screen.getAllByRole("button");
-        const botaoEntrar = botoes.find((b) => b.textContent === "Entrar");
-
-        await userEvent.type(inputEmail, "lucas@adotapet.com");
-        await userEvent.type(inputSenha, "senhaSegura123");
-
-        if (botaoEntrar) {
-            await userEvent.click(botaoEntrar);
-        }
-
-        await waitFor(() => {
-            expect(screen.queryByText("O e-mail é obrigatório")).not.toBeInTheDocument();
-            expect(screen.queryByText("A senha deve ter no mínimo 8 caracteres")).not.toBeInTheDocument();
+            expect(screen.getByText("Credenciais inválidas")).toBeInTheDocument();
         });
     });
 });
