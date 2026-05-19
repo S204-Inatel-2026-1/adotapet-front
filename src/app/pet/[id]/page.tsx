@@ -1,16 +1,31 @@
 'use client';
 
 // src/app/pet/[id]/page.tsx
-// CORRIGIDO: cores do design system, <Image> do Next, sem bg-green-100
+// Detecta se usuário está logado para mostrar formulário de adoção ou redirecionar
 
 import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { api } from '@/services/api';
 import { Pet } from '@/types/pets';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/contexts/AuthContext';
+import Navbar from '@/components/layout/Navbar';
+import PrivateHeader from '@/components/layout/PrivateHeader';
+import Footer from '@/components/layout/Footer';
+import BackToDashboard from '@/components/ui/BackToHome';
+
+const adocaoSchema = z.object({
+  motivation: z.string().min(20, 'Conte um pouco mais sobre sua motivação (mín. 20 caracteres)'),
+  hasOtherPets: z.enum(['yes', 'no'], { required_error: 'Selecione uma opção' }),
+  hasChildren: z.enum(['yes', 'no'], { required_error: 'Selecione uma opção' }),
+  housingType: z.enum(['house', 'apartment', 'farm'], { required_error: 'Selecione o tipo de moradia' }),
+  acceptTerms: z.literal(true, { errorMap: () => ({ message: 'Você precisa aceitar os termos' }) }),
+});
+
+type AdocaoForm = z.infer<typeof adocaoSchema>;
 
 const sizeLabel: Record<Pet['size'], string> = {
   small: 'Pequeno',
@@ -19,13 +34,21 @@ const sizeLabel: Record<Pet['size'], string> = {
 };
 
 export default function PetDetails() {
-  const { isAuthenticated } = useAuth();
   const { id } = useParams();
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   const [pet, setPet] = useState<Pet | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<AdocaoForm>({ resolver: zodResolver(adocaoSchema) });
 
   useEffect(() => {
     if (!id) return;
@@ -42,6 +65,18 @@ export default function PetDetails() {
     };
     fetchPet();
   }, [id]);
+
+  const onSubmit = async (data: AdocaoForm) => {
+    // TODO (Lucas): conectar com POST /adoptions
+    await new Promise((r) => setTimeout(r, 1200));
+    console.log('Solicitação de adoção:', { petId: id, ...data });
+    setSubmitted(true);
+  };
+
+  const inputClass = (hasError: boolean) =>
+    `w-full px-5 py-4 rounded-2xl bg-[#F9F7F2] outline-none font-medium transition-all focus:ring-2 focus:ring-[#F4C542] ${
+      hasError ? 'ring-2 ring-red-400' : ''
+    }`;
 
   if (loading) {
     return (
@@ -70,33 +105,29 @@ export default function PetDetails() {
     );
   }
 
-  // 👇 ADICIONADO: lógica simples do botão
-  const handleAdoption = () => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
-
-    alert('Aqui vamos para o formulario quando eu criar');
-  };
-
   return (
     <main className="bg-[#F9F7F2] min-h-screen font-sans">
-      <Navbar />
+      {/* Header muda conforme autenticação */}
+      {isAuthenticated ? <PrivateHeader /> : <Navbar />}
       <div className="h-20" />
 
-      <div className="max-w-4xl mx-auto px-8 py-12">
-        {/* Botão voltar */}
-        <button
-          onClick={() => router.back()}
-          className="mb-8 text-[#3A5B4F] hover:text-[#2C4A3E] flex items-center gap-2 font-semibold transition-colors"
-        >
-          ← Voltar
-        </button>
+      {/* Botão voltar: ao dashboard se logado, senão volta no histórico */}
+      {isAuthenticated ? (
+        <BackToDashboard />
+      ) : (
+        <div className="max-w-6xl mx-auto px-8 pt-8">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-[#5E736A] hover:text-[#2C4A3E] transition-colors text-sm font-light"
+          >
+            <span>←</span> Voltar
+          </button>
+        </div>
+      )}
 
-        {/* Card principal */}
-        <div className="bg-white rounded-[40px] shadow-sm border border-gray-100 overflow-hidden">
-          {/* Imagem */}
+      <div className="max-w-4xl mx-auto px-8 py-8">
+        {/* Card do pet */}
+        <div className="bg-white rounded-[40px] shadow-sm border border-gray-100 overflow-hidden mb-8">
           <div className="relative w-full h-96">
             <Image
               src={pet.image}
@@ -106,7 +137,6 @@ export default function PetDetails() {
               className="object-cover"
               priority
             />
-            {/* Badge tipo */}
             <div className="absolute top-6 right-6 bg-[#F4C542] px-4 py-2 rounded-full shadow-md">
               <span className="text-[12px] font-black text-[#2C4A3E] uppercase tracking-widest">
                 {pet.type === 'dog' ? '🐶 Cachorro' : '🐱 Gato'}
@@ -114,23 +144,17 @@ export default function PetDetails() {
             </div>
           </div>
 
-          {/* Conteúdo */}
           <div className="p-8 md:p-10">
-            {/* Nome e gênero */}
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h1 className="text-4xl font-black text-[#2C4A3E]">{pet.name}</h1>
                 <p className="text-gray-400 font-bold mt-1">{pet.age} — {pet.breed}</p>
               </div>
-              <span
-                className="text-3xl"
-                title={pet.gender === 'male' ? 'Macho' : 'Fêmea'}
-              >
+              <span className="text-3xl" title={pet.gender === 'male' ? 'Macho' : 'Fêmea'}>
                 {pet.gender === 'male' ? '♂️' : '♀️'}
               </span>
             </div>
 
-            {/* Info em cards */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
               <div className="bg-[#F9F7F2] p-4 rounded-2xl">
                 <p className="text-xs font-black text-[#3A5B4F] uppercase tracking-widest mb-1">Porte</p>
@@ -146,21 +170,16 @@ export default function PetDetails() {
               </div>
             </div>
 
-            {/* Tags */}
             {pet.tags && pet.tags.length > 0 && (
               <div className="flex flex-wrap gap-3 mb-8">
                 {pet.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="bg-[#E8F0E6] text-[#3A5B4F] text-xs font-black px-5 py-2 rounded-full"
-                  >
+                  <span key={tag} className="bg-[#E8F0E6] text-[#3A5B4F] text-xs font-black px-5 py-2 rounded-full">
                     {tag}
                   </span>
                 ))}
               </div>
             )}
 
-            {/* Descrição */}
             {pet.description && (
               <div className="mb-8">
                 <h2 className="text-xl font-bold text-[#2C4A3E] mb-3">Sobre {pet.name}</h2>
@@ -168,15 +187,182 @@ export default function PetDetails() {
               </div>
             )}
 
-            {/* Botão adoção */}
-            <button
-              onClick={handleAdoption}
-              className="w-full bg-[#3A5B4F] text-white font-bold py-4 rounded-2xl hover:bg-[#2C4A3E] transition-all shadow-lg hover:shadow-xl text-lg"
-            >
-              Solicitar adoção ♡
-            </button>
+            {/* Botão de adoção */}
+            {!isAuthenticated ? (
+              <div className="bg-[#F9F7F2] rounded-2xl p-6 text-center">
+                <p className="text-[#2C4A3E] font-bold mb-4">
+                  Faça login para solicitar a adoção de {pet.name} 🐾
+                </p>
+                <a
+                  href="/login"
+                  className="bg-[#3A5B4F] text-white font-bold py-3 px-10 rounded-2xl hover:bg-[#2C4A3E] transition-all inline-block"
+                >
+                  Entrar na conta
+                </a>
+              </div>
+            ) : !showForm ? (
+              <button
+                onClick={() => setShowForm(true)}
+                className="w-full bg-[#3A5B4F] text-white font-bold py-4 rounded-2xl hover:bg-[#2C4A3E] transition-all shadow-lg hover:shadow-xl text-lg"
+              >
+                Solicitar adoção ♡
+              </button>
+            ) : null}
           </div>
         </div>
+
+        {/* Formulário de adoção */}
+        {isAuthenticated && showForm && (
+          <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 md:p-10">
+            {submitted ? (
+              <div className="text-center py-8">
+                <span className="text-6xl mb-6 block">🐾</span>
+                <h2 className="text-2xl font-black text-[#2C4A3E] mb-3">Solicitação enviada!</h2>
+                <p className="text-gray-500 mb-8">
+                  Sua solicitação para adotar {pet.name} foi enviada. A ONG responsável irá analisar
+                  e entrar em contato em breve. Acompanhe em{' '}
+                  <a href="/minhas-adocoes" className="text-[#3A5B4F] font-bold underline">
+                    Minhas Adoções
+                  </a>
+                  .
+                </p>
+                <a
+                  href="/dashboard"
+                  className="bg-[#3A5B4F] text-white px-10 py-4 rounded-2xl font-bold hover:bg-[#2C4A3E] transition-all inline-block"
+                >
+                  Voltar ao início
+                </a>
+              </div>
+            ) : (
+              <>
+                <h2 className="text-2xl font-black text-[#2C4A3E] mb-2">
+                  Solicitar adoção — {pet.name}
+                </h2>
+                <p className="text-gray-400 mb-8">
+                  Conta um pouco sobre você para a ONG conhecer o futuro lar de {pet.name}.
+                </p>
+
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                  {/* Motivação */}
+                  <div>
+                    <label className="text-xs font-black text-[#2C4A3E] uppercase tracking-widest block mb-2">
+                      Por que você quer adotar {pet.name}? *
+                    </label>
+                    <textarea
+                      rows={4}
+                      placeholder="Conte sua história, sua rotina e por que você seria o lar ideal..."
+                      {...register('motivation')}
+                      className={`${inputClass(!!errors.motivation)} resize-none`}
+                    />
+                    {errors.motivation && (
+                      <p className="text-xs text-red-500 mt-1">{errors.motivation.message}</p>
+                    )}
+                  </div>
+
+                  {/* Outros pets */}
+                  <div>
+                    <label className="text-xs font-black text-[#2C4A3E] uppercase tracking-widest block mb-3">
+                      Você tem outros animais em casa? *
+                    </label>
+                    <div className="flex gap-3">
+                      {[{ value: 'yes', label: '✅ Sim' }, { value: 'no', label: '❌ Não' }].map((opt) => (
+                        <label key={opt.value} className="cursor-pointer">
+                          <input type="radio" value={opt.value} {...register('hasOtherPets')} className="sr-only peer" />
+                          <span className="px-6 py-3 rounded-2xl bg-[#F9F7F2] font-bold text-[#2C4A3E] border-2 border-transparent peer-checked:border-[#3A5B4F] peer-checked:bg-[#E8F0E6] transition-all block">
+                            {opt.label}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    {errors.hasOtherPets && (
+                      <p className="text-xs text-red-500 mt-1">{errors.hasOtherPets.message}</p>
+                    )}
+                  </div>
+
+                  {/* Crianças */}
+                  <div>
+                    <label className="text-xs font-black text-[#2C4A3E] uppercase tracking-widest block mb-3">
+                      Há crianças na sua casa? *
+                    </label>
+                    <div className="flex gap-3">
+                      {[{ value: 'yes', label: '✅ Sim' }, { value: 'no', label: '❌ Não' }].map((opt) => (
+                        <label key={opt.value} className="cursor-pointer">
+                          <input type="radio" value={opt.value} {...register('hasChildren')} className="sr-only peer" />
+                          <span className="px-6 py-3 rounded-2xl bg-[#F9F7F2] font-bold text-[#2C4A3E] border-2 border-transparent peer-checked:border-[#3A5B4F] peer-checked:bg-[#E8F0E6] transition-all block">
+                            {opt.label}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    {errors.hasChildren && (
+                      <p className="text-xs text-red-500 mt-1">{errors.hasChildren.message}</p>
+                    )}
+                  </div>
+
+                  {/* Tipo de moradia */}
+                  <div>
+                    <label className="text-xs font-black text-[#2C4A3E] uppercase tracking-widest block mb-3">
+                      Tipo de moradia *
+                    </label>
+                    <div className="flex gap-3 flex-wrap">
+                      {[
+                        { value: 'house', label: '🏠 Casa' },
+                        { value: 'apartment', label: '🏢 Apartamento' },
+                        { value: 'farm', label: '🌳 Sítio/Fazenda' },
+                      ].map((opt) => (
+                        <label key={opt.value} className="cursor-pointer">
+                          <input type="radio" value={opt.value} {...register('housingType')} className="sr-only peer" />
+                          <span className="px-6 py-3 rounded-2xl bg-[#F9F7F2] font-bold text-[#2C4A3E] border-2 border-transparent peer-checked:border-[#3A5B4F] peer-checked:bg-[#E8F0E6] transition-all block">
+                            {opt.label}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    {errors.housingType && (
+                      <p className="text-xs text-red-500 mt-1">{errors.housingType.message}</p>
+                    )}
+                  </div>
+
+                  {/* Termos */}
+                  <div>
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        {...register('acceptTerms')}
+                        className="mt-1 w-5 h-5 accent-[#3A5B4F] flex-shrink-0"
+                      />
+                      <span className="text-sm text-gray-500">
+                        Declaro que li e aceito os{' '}
+                        <span className="text-[#3A5B4F] font-bold">termos de responsabilidade</span>{' '}
+                        e me comprometo a oferecer um lar seguro e amoroso para {pet.name}.
+                      </span>
+                    </label>
+                    {errors.acceptTerms && (
+                      <p className="text-xs text-red-500 mt-1">{errors.acceptTerms.message}</p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowForm(false)}
+                      className="px-8 py-4 rounded-2xl border border-gray-200 font-bold text-[#2C4A3E] hover:bg-gray-50 transition-all"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="flex-1 bg-[#3A5B4F] text-white font-bold py-4 rounded-2xl hover:bg-[#2C4A3E] transition-all shadow-lg text-lg disabled:opacity-70"
+                    >
+                      {isSubmitting ? 'Enviando...' : `Adotar ${pet.name} ♡`}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <Footer />
