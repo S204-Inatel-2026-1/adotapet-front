@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import PrivateHeader from '@/components/layout/PrivateHeader';
+import BackButton from '@/components/ui/BackButton';
 
 const perfilSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -51,6 +52,12 @@ export default function PerfilPage() {
     <main className="bg-[#F9F7F2] min-h-screen font-sans">
       <PrivateHeader />
       <div className="h-20" />
+
+        <div className="max-w-4xl mx-auto px-8 py-12">
+          <div className="mb-4 -ml-2 -mt-2">
+            <BackButton href="/dashboard" label="Voltar" />
+          </div>
+        </div>
 
       <div className="max-w-2xl mx-auto px-8 py-12">
         <div className="mb-10">

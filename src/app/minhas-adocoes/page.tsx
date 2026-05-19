@@ -3,6 +3,7 @@
 // src/app/minhas-adocoes/page.tsx
 
 import PrivateHeader from '@/components/layout/PrivateHeader';
+import BackButton from '@/components/ui/BackButton';
 
 // TODO (Lucas): substituir por GET /adoptions/my-requests
 const MOCK_ADOPTIONS = [
@@ -48,7 +49,15 @@ export default function MinhasAdocoesPage() {
       <div className="h-20" />
 
       <div className="max-w-4xl mx-auto px-8 py-12">
+        <div className="max-w-4xl mx-auto px-8 py-12">
+          <div className="mb-4 -ml-2 -mt-2">
+            <BackButton href="/dashboard" label="Voltar" />
+          </div>
+        </div>
+
+        
         <div className="mb-10">
+          
           <h1 className="text-4xl font-black text-[#2C4A3E] mb-2">Minhas Adoções</h1>
           <p className="text-gray-500">Acompanhe o status dos seus pedidos de adoção.</p>
         </div>

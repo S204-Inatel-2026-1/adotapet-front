@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser({
       name: 'Lilyan Teste',
       email: 'lilyan@adotapet.com',
-      role: 'ong', // troque para 'ong' para ver o painel da ONG
+      role: 'adopter', // troque para 'ong' para ver o painel da ONG
     });
     setLoading(false);
     return; // essa linha faz ignorar o resto do useEffect
