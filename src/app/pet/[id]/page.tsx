@@ -10,6 +10,7 @@ import { api } from '@/services/api';
 import { Pet } from '@/types/pets';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import { useAuth } from '@/contexts/AuthContext';
 
 const sizeLabel: Record<Pet['size'], string> = {
   small: 'Pequeno',
@@ -18,6 +19,7 @@ const sizeLabel: Record<Pet['size'], string> = {
 };
 
 export default function PetDetails() {
+  const { isAuthenticated } = useAuth();
   const { id } = useParams();
   const router = useRouter();
 
@@ -67,6 +69,16 @@ export default function PetDetails() {
       </main>
     );
   }
+
+  // 👇 ADICIONADO: lógica simples do botão
+  const handleAdoption = () => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    alert('Aqui vamos para o formulario quando eu criar');
+  };
 
   return (
     <main className="bg-[#F9F7F2] min-h-screen font-sans">
@@ -157,7 +169,10 @@ export default function PetDetails() {
             )}
 
             {/* Botão adoção */}
-            <button className="w-full bg-[#3A5B4F] text-white font-bold py-4 rounded-2xl hover:bg-[#2C4A3E] transition-all shadow-lg hover:shadow-xl text-lg">
+            <button
+              onClick={handleAdoption}
+              className="w-full bg-[#3A5B4F] text-white font-bold py-4 rounded-2xl hover:bg-[#2C4A3E] transition-all shadow-lg hover:shadow-xl text-lg"
+            >
               Solicitar adoção ♡
             </button>
           </div>

@@ -13,6 +13,7 @@ import { api } from "@/services/api";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import BackToHome from '@/components/ui/BackToHome';
 
 //  O CONTRATO (ZOD): Aqui definimos as regras do formulário
 const loginSchema = z.object({
@@ -189,14 +190,11 @@ export default function Login() {
                                     </button>
                                 </Link>
                             </form>
-
-                            <div className="mt-6 text-center">
-                                <Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                                    ← Voltar para o site
-                                </Link>
-                            </div>
+                            <div className="mt-6">
+                                <BackToHome centered />
+                            </div>                      
                         </div>
-
+                        
                         {/* Patinhas decorativas inferiores */}
                         <div className="mt-6 flex justify-center gap-2">
                             <PawPrint className="size-6 text-accent/60" />
